@@ -1,0 +1,23 @@
+{
+  "name": "@mukundan314/hexagony",
+  "version": "0.0.0",
+  "description": "An interpreter for hexagony written in javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mukundan314/hexagony.js.git"
+  },
+  "keywords": [
+    "hexagony",
+    "interpreter"
+  ],
+  "author": "Mukundan314",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Mukundan314/hexagony.js/issues"
+  },
+  "homepage": "https://github.com/Mukundan314/hexagony.js#readme"
+}
