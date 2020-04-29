@@ -46,7 +46,7 @@ export function sourceSize(source, debugMark = '`') {
   return size;
 }
 
-// Pads the source with no-ops so that it is an hexagon
+// Pads the source with no-ops so that it is a hexagon
 export function padSource(source, debugMark = '`') {
   assertValidDebugMark(debugMark);
 
