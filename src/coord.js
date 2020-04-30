@@ -7,7 +7,7 @@ const DIRECTIONS = {
   SE: [0, 1],
 };
 
-function distance(point1, point2) {
+export function distance(point1, point2) {
   return (
     Math.abs(point1[0] - point2[0])
     + Math.abs(point1[0] + point1[1] - point2[0] - point2[1])
@@ -23,24 +23,4 @@ export function neighbours(point) {
   });
 
   return result;
-}
-
-export function wrapAroundHexagon(point, size) {
-  const mirroredCenters = [
-    [2 * size + 1, -size],
-    [size, size + 1],
-    [-size - 1, 2 * size + 1],
-    [-size, -size - 1],
-    [size + 1, -2 * size - 1],
-  ];
-
-  let wrapedPoint = point;
-
-  mirroredCenters.forEach((center) => {
-    if (distance(center, point) <= size) {
-      wrapedPoint = [point[0] - center[0], point[1] - center[1]];
-    }
-  });
-
-  return wrapedPoint;
 }
