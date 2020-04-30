@@ -1,3 +1,4 @@
+import { Readable } from 'stream';
 import InstructionPointer from './InstructionPointer';
 import MemoryPointer from './MemoryPointer';
 import {
@@ -84,7 +85,9 @@ export default class Program {
     } else if (instruction === ',') {
     } else if (instruction === '?') {
     } else if (instruction === ';') {
+      this.output.push(String.fromCharCode(currMemory % 256));
     } else if (instruction === '!') {
+      this.output.push(currMemory.toString());
     } else if (instruction === '$') {
       this.ips[this.currentIP].moveForward(currMemory);
     } else if (instruction === '_') {
@@ -167,6 +170,8 @@ export default class Program {
       new InstructionPointer([-this.size, this.size], 'NW', this.size),
       new InstructionPointer([-this.size, 0], 'NE', this.size),
     ];
+
+    this.output = new Readable({ read() {} });
 
     return this;
   }
