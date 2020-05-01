@@ -56,20 +56,21 @@ export default class Program {
 
     const { direction } = this.ips[this.currentIP];
 
-    const currMemory = this.memory[this.memoryPointer.location] || 0;
-    const leftMemory = this.memory[this.memoryPointer.getLeftLocation()] || 0;
-    const rightMemory = this.memory[this.memoryPointer.getRightLocation()] || 0;
+    const currIP = this.currentIP;
+    const currMemory = this.memory[this.memoryPointer.location] || 0n;
+    const leftMemory = this.memory[this.memoryPointer.getLeftLocation()] || 0n;
+    const rightMemory = this.memory[this.memoryPointer.getRightLocation()] || 0n;
 
     if (/[a-zA-Z]/.test(instruction)) {
-      this.memory[this.memoryPointer.location] = instruction.charCodeAt(0);
+      this.memory[this.memoryPointer.location] = BigInt(instruction.charCodeAt(0));
     } else if (instruction === '@') {
       this.finished = true;
     } else if (/[0-9]/.test(instruction)) {
-      this.memory[this.memoryPointer.location] = currMemory * 10 + parseInt(instruction, 10);
+      this.memory[this.memoryPointer.location] = currMemory * 10n + BigInt(instruction);
     } else if (instruction === ')') {
-      this.memory[this.memoryPointer.location] = currMemory + 1;
+      this.memory[this.memoryPointer.location] = currMemory + 1n;
     } else if (instruction === '(') {
-      this.memory[this.memoryPointer.location] = currMemory - 1;
+      this.memory[this.memoryPointer.location] = currMemory - 1n;
     } else if (instruction === '+') {
       this.memory[this.memoryPointer.location] = leftMemory + rightMemory;
     } else if (instruction === '-') {
@@ -81,11 +82,11 @@ export default class Program {
     } else if (instruction === '%') {
       this.memory[this.memoryPointer.location] = leftMemory % rightMemory;
     } else if (instruction === '~') {
-      this.memory[this.memoryPointer.location] = -1 * currMemory;
+      this.memory[this.memoryPointer.location] = -1n * currMemory;
     } else if (instruction === ',') {
     } else if (instruction === '?') {
     } else if (instruction === ';') {
-      this.output.push(String.fromCharCode(currMemory % 256));
+      this.output.push(String.fromCharCode(Number(currMemory % 256n)));
     } else if (instruction === '!') {
       this.output.push(currMemory.toString());
     } else if (instruction === '$') {
@@ -111,11 +112,11 @@ export default class Program {
         this.ips[this.currentIP].direction = REFLECT[instruction][direction];
       }
     } else if (instruction === '[') {
-      this.currentIP = ((this.currentIP - 1) + 6) % 6;
+      this.currentIP = this.currentIP === 0 ? 5 : this.currentIP - 1;
     } else if (instruction === ']') {
-      this.currentIP = (this.currentIP + 1) % 6;
+      this.currentIP = this.currentIP === 5 ? 0 : this.currentIP + 1;
     } else if (instruction === '#') {
-      this.currentIP = currMemory % 6;
+      this.currentIP = Number(currMemory % 6n);
     } else if (instruction === '{') {
       this.memoryPointer.moveLeft();
     } else if (instruction === '}') {
@@ -144,7 +145,7 @@ export default class Program {
       }
     }
 
-    this.ips[this.currentIP].moveForward(this.memory[this.memoryPointer.location]);
+    this.ips[currIP].moveForward(this.memory[this.memoryPointer.location]);
 
     return this;
   }
