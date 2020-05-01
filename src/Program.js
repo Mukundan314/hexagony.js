@@ -57,8 +57,8 @@ export default class Program {
     const { direction } = this.ips[this.currentIP];
 
     const currMemory = this.memory[this.memoryPointer.location] || 0;
-    const leftMemory = this.memory[this.memoryPointer.getLeftLocation] || 0;
-    const rightMemory = this.memory[this.memoryPointer.getRightLocation] || 0;
+    const leftMemory = this.memory[this.memoryPointer.getLeftLocation()] || 0;
+    const rightMemory = this.memory[this.memoryPointer.getRightLocation()] || 0;
 
     if (/[a-zA-Z]/.test(instruction)) {
       this.memory[this.memoryPointer.location] = instruction.charCodeAt(0);
