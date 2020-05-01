@@ -27,9 +27,9 @@ const REFLECT = {
 };
 
 export default class Program {
-  constructor(program, size, debug = false, debugMark = '`') {
+  constructor(program, debug = false, debugMark = '`') {
     this.program = padSource(removeDuplicateDebugMarks(program.replace(/(\c|\n)/g, ''), debugMark));
-    this.size = size === undefined ? sourceSize(this.program) : size;
+    this.size = sourceSize(this.program);
     this.debugLocations = debug ? debugMarkLocations(this.program, debugMark) : [];
     this.program = this.program.replace(debugMark, '');
 

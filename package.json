@@ -9,7 +9,11 @@
     "lint:fix": "eslint --fix src/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": {
+    "hexagony": "bin/hexagony-cli.js"
+  },
   "directories": {
+    "bin": "bin",
     "lib": "lib"
   },
   "repository": {
@@ -38,5 +42,8 @@
   "browserslist": [
     "defaults",
     "maintained node versions"
-  ]
+  ],
+  "dependencies": {
+    "commander": "^5.1.0"
+  }
 }
