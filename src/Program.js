@@ -144,7 +144,7 @@ export default class Program {
       }
     }
 
-    this.ips[this.currentIP].moveForward(currMemory);
+    this.ips[this.currentIP].moveForward(this.memory[this.memoryPointer.location]);
 
     return this;
   }
