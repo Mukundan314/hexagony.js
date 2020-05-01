@@ -2,7 +2,7 @@ import { Readable } from 'stream';
 import InstructionPointer from './InstructionPointer';
 import MemoryPointer from './MemoryPointer';
 import {
-  padSource, sourceSize, debugMarkLocations, isInstructionChar,
+  padSource, sourceSize, debugMarkLocations, isInstructionChar, removeDuplicateDebugMarks,
 } from './utils';
 
 const REFLECT = {
@@ -28,9 +28,10 @@ const REFLECT = {
 
 export default class Program {
   constructor(program, size, debug = false, debugMark = '`') {
-    this.size = size === undefined ? sourceSize(program) : size;
-    this.debugLocations = debug ? debugMarkLocations(program, debugMark) : [];
-    this.program = padSource(program, debugMark).replace(/\c/g, '').replace(debugMark, '');
+    this.program = padSource(removeDuplicateDebugMarks(program.replace(/(\c|\n)/g, ''), debugMark));
+    this.size = size === undefined ? sourceSize(this.program) : size;
+    this.debugLocations = debug ? debugMarkLocations(this.program, debugMark) : [];
+    this.program = this.program.replace(debugMark, '');
 
     if (!Array.from(this.program).every(isInstructionChar)) {
       throw new RangeError('Invalid instructions in program');
