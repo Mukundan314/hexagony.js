@@ -28,21 +28,25 @@ const REFLECT = {
 
 export default class Program {
   constructor(program, debug = false, debugMark = '`') {
-    this.program = padSource(removeDuplicateDebugMarks(program.replace(/(\c|\n)/g, ''), debugMark));
-    this.size = sourceSize(this.program);
-    this.debugLocations = debug ? debugMarkLocations(this.program, debugMark) : [];
-    this.program = this.program.replace(debugMark, '');
+    this.program = padSource(removeDuplicateDebugMarks(program.replace(/\s/g, ''), debugMark));
+    this.size = sourceSize(this.program, debugMark);
+    const debugLocations = new Set(debug ? debugMarkLocations(this.program, debugMark) : []);
+    this.program = this.program.split(debugMark).join('');
 
     if (!Array.from(this.program).every(isInstructionChar)) {
       throw new RangeError('Invalid instructions in program');
     }
 
+    this.debugLocations = [];
     this.gridProgram = Array(2 * this.size + 1).fill().reduce((res, _, i) => {
       const r = i - this.size;
       const start = Object.keys(res).length;
       const stop = start + (2 * this.size + 1) - Math.abs(r);
 
       Array.from(this.program.slice(start, stop)).forEach((v, j) => {
+        if (debugLocations.has(start + j)) {
+          this.debugLocations.push([j - Math.min(i, this.size), r]);
+        }
         res[[j - Math.min(i, this.size), r]] = v;
       });
 
@@ -57,8 +61,10 @@ export default class Program {
 
     const { direction } = this.ips[this.currentIP];
 
-    const currIP = this.currentIP;
-    const currMemory = this.memory[this.memoryPointer.location] || 0n;
+    const prevIP = this.currentIP;
+    const prevLocation = this.ips[this.currentIP].location;
+
+    const prevMemory = this.memory[this.memoryPointer.location] || 0n;
     const leftMemory = this.memory[this.memoryPointer.getLeftLocation()] || 0n;
     const rightMemory = this.memory[this.memoryPointer.getRightLocation()] || 0n;
 
@@ -67,11 +73,11 @@ export default class Program {
     } else if (instruction === '@') {
       this.finished = true;
     } else if (/[0-9]/.test(instruction)) {
-      this.memory[this.memoryPointer.location] = currMemory * 10n + BigInt(instruction);
+      this.memory[this.memoryPointer.location] = prevMemory * 10n + BigInt(instruction);
     } else if (instruction === ')') {
-      this.memory[this.memoryPointer.location] = currMemory + 1n;
+      this.memory[this.memoryPointer.location] = prevMemory + 1n;
     } else if (instruction === '(') {
-      this.memory[this.memoryPointer.location] = currMemory - 1n;
+      this.memory[this.memoryPointer.location] = prevMemory - 1n;
     } else if (instruction === '+') {
       this.memory[this.memoryPointer.location] = leftMemory + rightMemory;
     } else if (instruction === '-') {
@@ -79,19 +85,19 @@ export default class Program {
     } else if (instruction === '*') {
       this.memory[this.memoryPointer.location] = leftMemory * rightMemory;
     } else if (instruction === ':') {
-      this.memory[this.memoryPointer.location] = Math.round(leftMemory / rightMemory);
+      this.memory[this.memoryPointer.location] = Math.floor(leftMemory / rightMemory);
     } else if (instruction === '%') {
       this.memory[this.memoryPointer.location] = leftMemory % rightMemory;
     } else if (instruction === '~') {
-      this.memory[this.memoryPointer.location] = -1n * currMemory;
+      this.memory[this.memoryPointer.location] = -1n * prevMemory;
     } else if (instruction === ',') {
     } else if (instruction === '?') {
     } else if (instruction === ';') {
-      this.output.push(String.fromCharCode(Number(currMemory % 256n)));
+      this.output.push(String.fromCharCode(Number(prevMemory % 256n)));
     } else if (instruction === '!') {
-      this.output.push(currMemory.toString());
+      this.output.push(prevMemory.toString());
     } else if (instruction === '$') {
-      this.ips[this.currentIP].moveForward(currMemory);
+      this.ips[this.currentIP].moveForward(prevMemory);
     } else if (instruction === '_') {
       this.ips[this.currentIP].direction = REFLECT[instruction][direction];
     } else if (instruction === '|') {
@@ -101,13 +107,13 @@ export default class Program {
     } else if (instruction === '\\') {
       this.ips[this.currentIP].direction = REFLECT[instruction][direction];
     } else if (instruction === '<') {
-      if (currMemory > 0 && direction === 'E') {
+      if (prevMemory > 0 && direction === 'E') {
         this.ips[this.currentIP].direction = 'SE';
       } else {
         this.ips[this.currentIP].direction = REFLECT[instruction][direction];
       }
     } else if (instruction === '>') {
-      if (currMemory > 0 && direction === 'W') {
+      if (prevMemory > 0 && direction === 'W') {
         this.ips[this.currentIP].direction = 'NW';
       } else {
         this.ips[this.currentIP].direction = REFLECT[instruction][direction];
@@ -117,7 +123,7 @@ export default class Program {
     } else if (instruction === ']') {
       this.currentIP = this.currentIP === 5 ? 0 : this.currentIP + 1;
     } else if (instruction === '#') {
-      this.currentIP = Number(currMemory % 6n);
+      this.currentIP = Number(prevMemory % 6n);
     } else if (instruction === '{') {
       this.memoryPointer.moveLeft();
     } else if (instruction === '}') {
@@ -133,20 +139,38 @@ export default class Program {
     } else if (instruction === '=') {
       this.memoryPointer.reverse();
     } else if (instruction === '^') {
-      if (currMemory > 0) {
+      if (prevMemory > 0) {
         this.memoryPointer.moveRight();
       } else {
         this.memoryPointer.moveLeft();
       }
     } else if (instruction === '&') {
-      if (currMemory > 0) {
+      if (prevMemory > 0) {
         this.memory[this.memoryPointer.location] = rightMemory;
       } else {
         this.memory[this.memoryPointer.location] = leftMemory;
       }
     }
 
-    this.ips[currIP].moveForward(this.memory[this.memoryPointer.location]);
+    if (this.debugLocations.find((debugLocation) => debugLocation[0] === prevLocation[0]
+      && debugLocation[1] === prevLocation[1])) {
+      this.debug.push(`
+Tick ${this.tick}:
+IPs (! indicates active IP):
+${this.ips.map((ip, i) => `${prevIP === i ? '!' : ' '} ${i}: ${ip.location} ${ip.direction}`).join('\n')}
+Instruction: ${instruction}
+Memory: {${Object.entries(this.memory).map(([idx, val]) => `[${idx}]: ${val}`).join(', ')}}
+Memory Pointer: ${this.memoryPointer.location} cw=${this.memoryPointer.clockwise}
+`);
+    }
+
+    this.ips[prevIP].moveForward(this.memory[this.memoryPointer.location]);
+    this.tick += 1;
+
+    if (this.finished) {
+      this.debug.push(null);
+      this.output.push(null);
+    }
 
     return this;
   }
@@ -174,6 +198,9 @@ export default class Program {
     ];
 
     this.output = new Readable({ read() {} });
+    this.debug = new Readable({ read() {} });
+
+    this.tick = 0;
 
     return this;
   }
