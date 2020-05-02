@@ -7,14 +7,6 @@ const DIRECTIONS = {
   SE: [0, 1],
 };
 
-function distance(point1, point2) {
-  return (
-    Math.abs(point1[0] - point2[0])
-    + Math.abs(point1[0] + point1[1] - point2[0] - point2[1])
-    + Math.abs(point1[1] - point2[1])
-  ) / 2;
-}
-
 export default class InstructionPointer {
   constructor(location, direction, size) {
     this.location = location;
@@ -34,7 +26,7 @@ export default class InstructionPointer {
       Math.abs(newLocation[1]),
     ];
 
-    if (distance(newLocation, [0, 0]) > this.size) {
+    if (Math.max(...abs) > this.size) {
       const pivots = [0, 1, 2].filter((i) => abs[i] > this.size);
 
       let pivot;
