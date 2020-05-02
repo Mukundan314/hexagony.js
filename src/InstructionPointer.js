@@ -28,11 +28,11 @@ export default class InstructionPointer {
       this.location[1] + DIRECTIONS[this.direction][1],
     ];
 
-    const x = newLocation[0];
-    const z = newLocation[1];
-    const y = -x - z;
-
-    const abs = [Math.abs(x), Math.abs(y), Math.abs(z)];
+    const abs = [
+      Math.abs(newLocation[0]),
+      Math.abs(-newLocation[0] - newLocation[1]),
+      Math.abs(newLocation[1]),
+    ];
 
     if (distance(newLocation, [0, 0]) > this.size) {
       const pivots = [0, 1, 2].filter((i) => abs[i] > this.size);
@@ -42,7 +42,7 @@ export default class InstructionPointer {
         [pivot] = pivots;
       } else {
         pivot = (((pivots[0] - pivots[1]) % 3) + 3) % 3 === 1 ? pivots[1] : pivots[0];
-        pivot = memory <= 0 ? (pivot + 1) % 3 : pivot;
+        pivot = memory > 0 ? pivot : (pivot + 1) % 3;
       }
 
       const [i, j] = [0, 1, 2].filter((k) => k !== pivot);
