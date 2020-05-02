@@ -85,7 +85,7 @@ export default class Program {
     } else if (instruction === '*') {
       this.memory[this.memoryPointer.location] = leftMemory * rightMemory;
     } else if (instruction === ':') {
-      this.memory[this.memoryPointer.location] = Math.floor(leftMemory / rightMemory);
+      this.memory[this.memoryPointer.location] = leftMemory / rightMemory;
     } else if (instruction === '%') {
       this.memory[this.memoryPointer.location] = leftMemory % rightMemory;
     } else if (instruction === '~') {
