@@ -1,4 +1,19 @@
-import { distance, neighbours } from './coord';
+const DIRECTIONS = {
+  E: [1, 0],
+  NE: [1, -1],
+  NW: [0, -1],
+  W: [-1, 0],
+  SW: [-1, 1],
+  SE: [0, 1],
+};
+
+function distance(point1, point2) {
+  return (
+    Math.abs(point1[0] - point2[0])
+    + Math.abs(point1[0] + point1[1] - point2[0] - point2[1])
+    + Math.abs(point1[1] - point2[1])
+  ) / 2;
+}
 
 export default class InstructionPointer {
   constructor(location, direction, size) {
@@ -8,7 +23,10 @@ export default class InstructionPointer {
   }
 
   moveForward(memory) {
-    const newLocation = neighbours(this.location)[this.direction];
+    const newLocation = [
+      this.location[0] + DIRECTIONS[this.direction][0],
+      this.location[1] + DIRECTIONS[this.direction][1],
+    ];
 
     const x = newLocation[0];
     const z = newLocation[1];
