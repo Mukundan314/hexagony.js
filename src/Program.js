@@ -1,16 +1,15 @@
+import { Duplex } from 'stream';
 import InstructionPointer from './InstructionPointer';
 import MemoryPointer from './MemoryPointer';
 import instructionType from './instructionType';
-import { padSource, sourceSize, isInstructionChar } from './utils';
+import { padSource, sourceSize } from './utils';
 
-export default class Program {
+export default class Program extends Duplex {
   constructor(program) {
+    super();
+
     this.program = padSource(program.replace(/\s/g, ''));
     this.size = sourceSize(this.program);
-
-    if (!Array.from(this.program).every(isInstructionChar)) {
-      throw new RangeError('Invalid instructions in program');
-    }
 
     this.gridProgram = Array(2 * this.size + 1).fill().reduce((res, _, i) => {
       const r = i - this.size;
@@ -24,7 +23,32 @@ export default class Program {
       return res;
     }, {});
 
+    this.reset();
+  }
+
+  _read(size) { // eslint-disable-line
+    this.reading = this.push(this.output.slice(0, size));
+    this.output = this.output.slice(size);
+  }
+
+  _write(chunk, _, callback) { // eslint-disable-line
+    this.input += chunk;
+    callback(null);
+  }
+
+  _final(callback) { // eslint-disable-line
+    this.inputEnded = true;
+    callback(null);
+  }
+
+  reset() {
     this.finished = false;
+
+    this.input = '';
+    this.output = '';
+
+    this.reading = false;
+    this.inputEnded = false;
 
     this.memory = {};
     this.memoryPointer = new MemoryPointer([0, 0, 'E'], false);
@@ -117,10 +141,12 @@ export default class Program {
       case 'input_char':
         break;
       case 'output_char':
+        this.output += String.fromCharCode(Number(((currValue % 256n) + 256n) % 256n));
         break;
       case 'input_int':
         break;
       case 'output_int':
+        this.output += currValue.toString();
         break;
 
       // Control Flow
@@ -152,14 +178,22 @@ export default class Program {
       default: throw new Error(`Not implemented yet ${instruction}`);
     }
 
+    if (this.reading) {
+      this.reading = this.push(this.output);
+      this.output = '';
+    }
+
     this.ips[prevIP].moveForward(this.memory[this.memoryPointer.location] > 0n);
 
     return this;
   }
 
   run() {
-    while (!this.finished) {
+    const interval = setInterval(() => {
       this.step();
-    }
+      if (this.finished) clearInterval(interval);
+    }, 0);
+
+    return this;
   }
 }
