@@ -75,125 +75,132 @@ export default class Program extends Duplex {
 
     const prevIP = this.currentIP;
 
-    switch (instructionType(instruction)) {
-      // Memory manipulation
-      case 'digit':
-        this.memory[this.memoryPointer.location] = currValue * 10n
-          + (currValue < 0n ? -1n : 1n) * BigInt(instruction);
-        break;
-      case 'inc':
-        this.memory[this.memoryPointer.location] = currValue + 1n;
-        break;
-      case 'dec':
-        this.memory[this.memoryPointer.location] = currValue - 1n;
-        break;
-      case 'add':
-        this.memory[this.memoryPointer.location] = leftValue + rightValue;
-        break;
-      case 'sub':
-        this.memory[this.memoryPointer.location] = leftValue - rightValue;
-        break;
-      case 'mul':
-        this.memory[this.memoryPointer.location] = leftValue * rightValue;
-        break;
-      case 'div':
-        this.memory[this.memoryPointer.location] = leftValue / rightValue;
-        break;
-      case 'mod':
-        this.memory[this.memoryPointer.location] = leftValue % rightValue;
-        break;
-      case 'neg':
-        this.memory[this.memoryPointer.location] = -currValue;
-        break;
-      case 'mem_cpy':
-        this.memory[this.memoryPointer.location] = currValue > 0n ? rightValue : leftValue;
-        break;
-      case 'mem_set':
-        this.memory[this.memoryPointer.location] = BigInt(instruction.charCodeAt(0));
-        break;
+    return new Promise((resolve, reject) => {
+      if (this.finished) reject(new Error('Program already finished executing'));
 
-      // Memory Pointer manipulation
-      case 'mp_left':
-        this.memoryPointer.moveLeft();
-        break;
-      case 'mp_right':
-        this.memoryPointer.moveRight();
-        break;
-      case 'mp_reverse':
-        this.memoryPointer.reverse();
-        break;
-      case 'mp_rev_left':
-        this.memoryPointer.reverse();
-        this.memoryPointer.moveRight();
-        this.memoryPointer.reverse();
-        break;
-      case 'mp_rev_right':
-        this.memoryPointer.reverse();
-        this.memoryPointer.moveLeft();
-        this.memoryPointer.reverse();
-        break;
-      case 'mp_branch':
-        if (currValue > 0n) this.memoryPointer.moveRight();
-        else this.memoryPointer.moveLeft();
-        break;
+      switch (instructionType(instruction)) {
+        // Memory manipulation
+        case 'digit':
+          this.memory[this.memoryPointer.location] = currValue * 10n
+            + (currValue < 0n ? -1n : 1n) * BigInt(instruction);
+          break;
+        case 'inc':
+          this.memory[this.memoryPointer.location] = currValue + 1n;
+          break;
+        case 'dec':
+          this.memory[this.memoryPointer.location] = currValue - 1n;
+          break;
+        case 'add':
+          this.memory[this.memoryPointer.location] = leftValue + rightValue;
+          break;
+        case 'sub':
+          this.memory[this.memoryPointer.location] = leftValue - rightValue;
+          break;
+        case 'mul':
+          this.memory[this.memoryPointer.location] = leftValue * rightValue;
+          break;
+        case 'div':
+          this.memory[this.memoryPointer.location] = leftValue / rightValue;
+          break;
+        case 'mod':
+          this.memory[this.memoryPointer.location] = leftValue % rightValue;
+          break;
+        case 'neg':
+          this.memory[this.memoryPointer.location] = -currValue;
+          break;
+        case 'mem_cpy':
+          this.memory[this.memoryPointer.location] = currValue > 0n ? rightValue : leftValue;
+          break;
+        case 'mem_set':
+          this.memory[this.memoryPointer.location] = BigInt(instruction.charCodeAt(0));
+          break;
 
-      // I/O
-      case 'input_char':
-        break;
-      case 'output_char':
-        this.output += String.fromCharCode(Number(((currValue % 256n) + 256n) % 256n));
-        break;
-      case 'input_int':
-        break;
-      case 'output_int':
-        this.output += currValue.toString();
-        break;
+        // Memory Pointer manipulation
+        case 'mp_left':
+          this.memoryPointer.moveLeft();
+          break;
+        case 'mp_right':
+          this.memoryPointer.moveRight();
+          break;
+        case 'mp_reverse':
+          this.memoryPointer.reverse();
+          break;
+        case 'mp_rev_left':
+          this.memoryPointer.reverse();
+          this.memoryPointer.moveRight();
+          this.memoryPointer.reverse();
+          break;
+        case 'mp_rev_right':
+          this.memoryPointer.reverse();
+          this.memoryPointer.moveLeft();
+          this.memoryPointer.reverse();
+          break;
+        case 'mp_branch':
+          if (currValue > 0n) this.memoryPointer.moveRight();
+          else this.memoryPointer.moveLeft();
+          break;
 
-      // Control Flow
-      case 'jump':
-        this.ips[this.currentIP].moveForward(currValue > 0n);
-        break;
-      case 'mirror':
-        this.ips[this.currentIP].reflect(instruction);
-        break;
-      case 'branch':
-        this.ips[this.currentIP].branch(instruction, currValue > 0n);
-        break;
-      case 'next_ip':
-        this.currentIP = (this.currentIP + 1) % 6;
-        break;
-      case 'prev_ip':
-        this.currentIP = (((this.currentIP - 1) % 6) + 6) % 6;
-        break;
-      case 'choose_ip':
-        this.currentIP = Number(((currValue % 6n) + 6n) % 6n);
-        break;
+        // I/O
+        case 'input_char':
+          break;
+        case 'output_char':
+          this.output += String.fromCharCode(Number(((currValue % 256n) + 256n) % 256n));
+          break;
+        case 'input_int':
+          break;
+        case 'output_int':
+          this.output += currValue.toString();
+          break;
 
-      case 'nop':
-        break;
-      case 'terminate':
-        this.finished = true;
-        break;
+        // Control Flow
+        case 'jump':
+          this.ips[this.currentIP].moveForward(currValue > 0n);
+          break;
+        case 'mirror':
+          this.ips[this.currentIP].reflect(instruction);
+          break;
+        case 'branch':
+          this.ips[this.currentIP].branch(instruction, currValue > 0n);
+          break;
+        case 'next_ip':
+          this.currentIP = (this.currentIP + 1) % 6;
+          break;
+        case 'prev_ip':
+          this.currentIP = (((this.currentIP - 1) % 6) + 6) % 6;
+          break;
+        case 'choose_ip':
+          this.currentIP = Number(((currValue % 6n) + 6n) % 6n);
+          break;
 
-      default: throw new Error(`Not implemented yet ${instruction}`);
-    }
+        case 'nop':
+          break;
+        case 'terminate':
+          this.finished = true;
+          break;
 
-    if (this.reading) {
-      this.reading = this.push(this.output);
-      this.output = '';
-    }
+        default: throw new Error(`Not implemented yet ${instruction}`);
+      }
 
-    this.ips[prevIP].moveForward(this.memory[this.memoryPointer.location] > 0n);
+      if (this.reading) {
+        this.reading = this.push(this.output);
+        this.output = '';
+      }
 
-    return this;
+      this.ips[prevIP].moveForward(this.memory[this.memoryPointer.location] > 0n);
+
+      resolve();
+    });
   }
 
   run() {
-    const interval = setInterval(() => {
-      this.step();
-      if (this.finished) clearInterval(interval);
-    }, 0);
+    return new Promise((resolve, reject) => {
+      if (this.finished) {
+        resolve();
+      }
 
-    return this;
+      this.step()
+        .then(() => { resolve(this.run()); })
+        .catch(reject);
+    });
   }
 }
