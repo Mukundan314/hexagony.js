@@ -23,25 +23,6 @@ export default class Program extends Duplex {
       return res;
     }, {});
 
-    this.reset();
-  }
-
-  _read(size) { // eslint-disable-line
-    this.reading = this.push(this.output.slice(0, size));
-    this.output = this.output.slice(size);
-  }
-
-  _write(chunk, _, callback) { // eslint-disable-line
-    this.input += chunk;
-    callback(null);
-  }
-
-  _final(callback) { // eslint-disable-line
-    this.inputEnded = true;
-    callback(null);
-  }
-
-  reset() {
     this.finished = false;
 
     this.input = '';
@@ -62,8 +43,21 @@ export default class Program extends Duplex {
       new InstructionPointer([-this.size, this.size], 'NW', this.size),
       new InstructionPointer([-this.size, 0], 'NE', this.size),
     ];
+  }
 
-    return this;
+  _read(size) { // eslint-disable-line
+    this.reading = this.push(this.output.slice(0, size));
+    this.output = this.output.slice(size);
+  }
+
+  _write(chunk, _, callback) { // eslint-disable-line
+    this.input += chunk;
+    callback(null);
+  }
+
+  _final(callback) { // eslint-disable-line
+    this.inputEnded = true;
+    callback(null);
   }
 
   step() {
