@@ -2,11 +2,11 @@ import Program from './Program';
 import InstructionPointer from './InstructionPointer';
 import MemoryPointer from './MemoryPointer';
 import {
-  isInstructionChar,
   debugMarkLocations,
+  isInstructionChar,
+  padSource,
   removeDuplicateDebugMarks,
   sourceSize,
-  padSource,
 } from './utils';
 
 export { Program };
